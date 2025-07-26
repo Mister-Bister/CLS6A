@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Website cu Taburi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .tabs {
+      display: flex;
+      background-color: #333;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 16px;
+      text-align: center;
+      color: white;
+      cursor: pointer;
+      border-right: 1px solid #555;
+    }
+
+    .tab:last-child {
+      border-right: none;
+    }
+
+    .tab:hover {
+      background-color: #444;
+    }
+
+    .active {
+      background-color: #555;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    input, textarea, button {
+      font-family: inherit;
+      font-size: 1em;
+      padding: 10px;
+      margin-top: 10px;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button, input[type="submit"] {
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover, input[type="submit"]:hover {
+      background-color: #555;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script>
+    (function(){
+      emailjs.init("n6JyTnYNziFdGNWGT");
+    })();
+
+    function trimiteEmail(event) {
+      event.preventDefault();
+
+      emailjs.sendForm('service_ncc5f0m', 'template_6ug4b2m', '#formular')
+        .then(function() {
+          alert("Email trimis cu succes!");
+        }, function(error) {
+          alert("Eroare la trimitere: " + JSON.stringify(error));
+        });
+    }
+  </script>
+</head>
+<body>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('recent')">Recent</div>
+    <div class="tab" onclick="showTab('evenimente')">Evenimente</div>
+    <div class="tab" onclick="showTab('teme')">Teme</div>
+    <div class="tab" onclick="showTab('sugestii')">Sugestii</div>
+  </div>
+
+  <div class="content" id="tab-content">
+    <h2>Coming Soon</h2>
+  </div>
+
+  <script>
+    const content = document.getElementById('tab-content');
+    const tabs = document.querySelectorAll('.tab');
+
+    function showTab(tabName) {
+      tabs.forEach(tab => tab.classList.remove('active'));
+      const selectedTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase() === tabName);
+      if (selectedTab) selectedTab.classList.add('active');
+
+      if (tabName === 'sugestii') {
+        content.innerHTML = `
+          <h2>Bună! Ce mai faceți?</h2>
+          <form id="formular" onsubmit="trimiteEmail(event)">
+            <label for="raspuns">Răspuns:</label><br>
+            <input type="text" id="raspuns" name="raspuns" placeholder="Scrie răspunsul aici"><br><br>
+            <input type="submit" value="Trimite">
+          </form>
+        `;
+      } else {
+        content.innerHTML = `<h2>Coming Soon</h2>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
