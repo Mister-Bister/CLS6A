@@ -41,7 +41,15 @@
 
     .content {
       padding: 20px;
-      padding-bottom: 80px; /* pentru spațiu deasupra footerului */
+      padding-bottom: 80px;
+    }
+
+    .card {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
     }
 
     input, textarea, button {
@@ -88,12 +96,30 @@
       emailjs.init("n6JyTnYNziFdGNWGT");
     })();
 
+    let entries = [];
+
     function trimiteEmail(event) {
       event.preventDefault();
+      const mesaj = document.getElementById("raspuns").value.trim();
+
+      const dateMatch = mesaj.match(/\b(\d{2}\.\d{2}\.\d{4})\b/);
+      const data = dateMatch ? dateMatch[1] : null;
+      const mesajCuDataBold = data ? mesaj.replace(data, `<b>${data}</b>`) : mesaj;
+
+      const entry = {
+        original: mesaj,
+        formatted: mesajCuDataBold,
+        date: data ? new Date(data.split('.').reverse().join('-')) : new Date(),
+        type: /^teme:/i.test(mesaj) ? 'teme' : /^evenimente:/i.test(mesaj) ? 'evenimente' : 'altele'
+      };
+
+      entries.push(entry);
+      entries.sort((a, b) => b.date - a.date);
 
       emailjs.sendForm('service_ncc5f0m', 'template_6ug4b2m', '#formular')
         .then(function() {
           alert("Email trimis cu succes!");
+          document.getElementById("raspuns").value = "";
         }, function(error) {
           alert("Eroare la trimitere: " + JSON.stringify(error));
         });
@@ -106,7 +132,7 @@
     <div class="tab active" onclick="showTab('recent')">Recent</div>
     <div class="tab" onclick="showTab('evenimente')">Evenimente</div>
     <div class="tab" onclick="showTab('teme')">Teme</div>
-    <div class="tab" onclick="showTab('sugestii')">Sugestii</div>
+    <div class="tab" onclick="showTab('actualizări')">Actualizări</div>
   </div>
 
   <div class="content" id="tab-content">
@@ -127,7 +153,7 @@
       const selectedTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase() === tabName);
       if (selectedTab) selectedTab.classList.add('active');
 
-      if (tabName === 'sugestii') {
+      if (tabName === 'actualizări') {
         content.innerHTML = `
           <h2>Bună! Ce mai faceți?</h2>
           <form id="formular" onsubmit="trimiteEmail(event)">
@@ -137,11 +163,13 @@
           </form>
         `;
       } else {
-        content.innerHTML = `<h2>Coming Soon</h2>`;
+        const filtered = entries.filter(e => tabName === 'recent' || e.type === tabName);
+        content.innerHTML = filtered.length 
+          ? filtered.map(e => `<div class="card">${e.formatted}</div>`).join('') 
+          : `<h2>Coming Soon</h2>`;
       }
     }
   </script>
 
 </body>
 </html>
-
