@@ -9,6 +9,8 @@
       background: #ffffff;
       margin: 0;
       padding: 0;
+      position: relative;
+      min-height: 100vh;
     }
 
     .tabs {
@@ -39,6 +41,7 @@
 
     .content {
       padding: 20px;
+      padding-bottom: 80px; /* pentru spațiu deasupra footerului */
     }
 
     input, textarea, button {
@@ -60,6 +63,22 @@
 
     button:hover, input[type="submit"]:hover {
       background-color: #555;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      background-color: white;
+      text-align: right;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer img {
+      height: 40px;
     }
   </style>
 
@@ -94,6 +113,11 @@
     <h2>Coming Soon</h2>
   </div>
 
+  <div class="footer">
+    <span>Built, Hosted and Maintained by Vasile Alexandru Ioan</span>
+    <img src="/mnt/data/images.jpg" alt="Școala I. Gh. Duca Logo">
+  </div>
+
   <script>
     const content = document.getElementById('tab-content');
     const tabs = document.querySelectorAll('.tab');
@@ -120,3 +144,4 @@
 
 </body>
 </html>
+
