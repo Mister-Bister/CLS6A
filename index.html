@@ -9,8 +9,6 @@
       background: #ffffff;
       margin: 0;
       padding: 0;
-      position: relative;
-      min-height: 100vh;
     }
 
     .tabs {
@@ -41,7 +39,6 @@
 
     .content {
       padding: 20px;
-      padding-bottom: 80px;
     }
 
     .card {
@@ -52,24 +49,23 @@
       background-color: #f9f9f9;
     }
 
-    input, textarea, button {
+    button, input, textarea {
       font-family: inherit;
       font-size: 1em;
       padding: 10px;
       margin-top: 10px;
-      display: block;
       width: 100%;
       box-sizing: border-box;
     }
 
-    button, input[type="submit"] {
+    button {
       background-color: #333;
       color: white;
       border: none;
       cursor: pointer;
     }
 
-    button:hover, input[type="submit"]:hover {
+    button:hover {
       background-color: #555;
     }
 
@@ -89,40 +85,97 @@
       height: 40px;
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
 
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('recent')">Recent</div>
+    <div class="tab" onclick="showTab('evenimente')">Evenimente</div>
+    <div class="tab" onclick="showTab('teme')">Teme</div>
+    <div class="tab" onclick="showTab('actualizări')">Actualizări</div>
+  </div>
+
+  <div class="content" id="tab-content">
+    <h2>Se încarcă...</h2>
+  </div>
+
+  <div class="footer">
+    <span>Built by Vasile Alexandru Ioan</span>
+  </div>
+
   <script>
-    (function(){
-      emailjs.init("n6JyTnYNziFdGNWGT");
-    })();
+    // === Firebase Config ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyBbbp8zggJc-ankzfoelklEI6Djnn64siE",
+      authDomain: "clasa-vi-a.firebaseapp.com",
+      projectId: "clasa-vi-a",
+      storageBucket: "clasa-vi-a.appspot.com",
+      messagingSenderId: "365045001879",
+      appId: "1:365045001879:web:edd135132f3d804efe43d2",
+      measurementId: "G-0XPSJH1WXZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
     let entries = [];
 
-    function trimiteEmail(event) {
+    function showTab(tabName) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => {
+        if (tab.textContent.trim().toLowerCase() === tabName.toLowerCase()) {
+          tab.classList.add('active');
+        }
+      });
+
+      if (tabName === 'actualizări') {
+        document.getElementById('tab-content').innerHTML = `
+          <h2>Bună! Ce mai faceți?</h2>
+          <form onsubmit="trimiteFirebase(event)">
+            <input type="text" id="raspuns" placeholder="Scrie mesajul">
+            <input type="submit" value="Trimite">
+          </form>
+        `;
+      } else {
+        const filtered = tabName === 'recent' ? entries : entries.filter(e => e.type === tabName);
+        const cards = filtered.map(e => `<div class="card">${e.formatted}</div>`).join('');
+        document.getElementById('tab-content').innerHTML = cards || "<h2>Fără conținut</h2>";
+
+        if (tabName === 'recent') {
+          document.getElementById('tab-content').innerHTML += `<button onclick="resetEntries()">Reset. Admin only</button>`;
+        }
+      }
+    }
+
+    function trimiteFirebase(event) {
       event.preventDefault();
       const mesaj = document.getElementById("raspuns").value.trim();
+      if (!mesaj) return;
 
       const dateMatch = mesaj.match(/\b(\d{2}\.\d{2}\.\d{4})\b/);
       const data = dateMatch ? dateMatch[1] : null;
       const mesajCuDataBold = data ? mesaj.replace(data, `<b>${data}</b>`) : mesaj;
 
-      const entry = {
+      const tip = /^teme:/i.test(mesaj) ? 'teme' : /^evenimente:/i.test(mesaj) ? 'evenimente' : 'altele';
+      const dataFinala = data ? new Date(data.split('.').reverse().join('-')) : new Date();
+
+      db.collection("mesaje").add({
         original: mesaj,
         formatted: mesajCuDataBold,
-        date: data ? new Date(data.split('.').reverse().join('-')) : new Date(),
-        type: /^teme:/i.test(mesaj) ? 'teme' : /^evenimente:/i.test(mesaj) ? 'evenimente' : 'altele'
-      };
+        type: tip,
+        date: firebase.firestore.Timestamp.fromDate(dataFinala)
+      }).then(() => {
+        document.getElementById("raspuns").value = "";
+      });
+    }
 
-      entries.push(entry);
-      entries.sort((a, b) => b.date - a.date);
-
-      emailjs.sendForm('service_ncc5f0m', 'template_6ug4b2m', '#formular')
-        .then(function() {
-          alert("Email trimis cu succes!");
-          document.getElementById("raspuns").value = "";
-        }, function(error) {
-          alert("Eroare la trimitere: " + JSON.stringify(error));
-        });
+    function loadEntries() {
+      db.collection("mesaje").orderBy("date", "desc").onSnapshot(snapshot => {
+        entries = snapshot.docs.map(doc => doc.data());
+        showTab('recent');
+      });
     }
 
     function resetEntries() {
@@ -150,67 +203,20 @@
       const input = document.getElementById('admin-pass');
       const pass = input.value;
       if (pass === '052013') {
-        entries = [];
-        alert("Toate datele au fost șterse.");
-        document.querySelector('div[style*="position: fixed"]').remove();
-        showTab('recent');
+        db.collection("mesaje").get().then(snapshot => {
+          const batch = db.batch();
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          return batch.commit();
+        }).then(() => {
+          alert("Toate mesajele au fost șterse.");
+          document.querySelector('div[style*="position: fixed"]').remove();
+        });
       } else {
         alert("Parolă greșită!");
       }
     }
+
+    loadEntries();
   </script>
-</head>
-<body>
-
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('recent')">Recent</div>
-    <div class="tab" onclick="showTab('evenimente')">Evenimente</div>
-    <div class="tab" onclick="showTab('teme')">Teme</div>
-    <div class="tab" onclick="showTab('actualizări')">Actualizări</div>
-  </div>
-
-  <div class="content" id="tab-content">
-    <h2>Coming Soon</h2>
-  </div>
-
-  <div class="footer">
-    <span>Built, Hosted and Maintained by Vasile Alexandru Ioan</span>
-    <img src="/mnt/data/images.jpg" alt="Școala I. Gh. Duca Logo">
-  </div>
-
-  <script>
-    const content = document.getElementById('tab-content');
-    const tabs = document.querySelectorAll('.tab');
-
-    function showTab(tabName) {
-      tabs.forEach(tab => tab.classList.remove('active'));
-      const selectedTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase() === tabName);
-      if (selectedTab) selectedTab.classList.add('active');
-
-      if (tabName === 'actualizări') {
-        content.innerHTML = `
-          <h2>Bună! Ce mai faceți?</h2>
-          <form id="formular" onsubmit="trimiteEmail(event)">
-            <label for="raspuns">Răspuns:</label><br>
-            <input type="text" id="raspuns" name="raspuns" placeholder="Scrie răspunsul aici"><br><br>
-            <input type="submit" value="Trimite">
-          </form>
-        `;
-      } else {
-        const filtered = entries.filter(e => tabName === 'recent' || e.type === tabName);
-        content.innerHTML = filtered.length 
-          ? filtered.map(e => `<div class="card">${e.formatted}</div>`).join('') 
-          : `<h2>Coming Soon</h2>`;
-
-        if (tabName === 'recent') {
-          content.innerHTML += `<button onclick="resetEntries()">Reset. Admin only</button>`;
-        }
-      }
-    }
-  </script>
-
 </body>
 </html>
-
-
-
