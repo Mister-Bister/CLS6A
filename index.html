@@ -84,10 +84,73 @@
     .footer img {
       height: 40px;
     }
+
+    .phone-mode .tabs {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .phone-mode .tab {
+      border-right: none;
+      border-bottom: 1px solid #555;
+      text-align: left;
+      padding: 12px;
+    }
+
+    .phone-mode .tab:last-child {
+      border-bottom: none;
+    }
+
+    .phone-mode body {
+      font-size: 1.2em;
+    }
+
+    .phone-mode .footer {
+      position: static;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #secret-menu {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      background: #fffbe7;
+      border: 2px solid #f0c36d;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        font-size: 1.2em;
+      }
+
+      .tabs {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .tab {
+        border-right: none;
+        border-bottom: 1px solid #555;
+        text-align: left;
+        padding: 12px;
+      }
+
+      .tab:last-child {
+        border-bottom: none;
+      }
+
+      .footer {
+        position: static;
+        justify-content: center;
+        padding: 20px;
+      }
+    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -96,6 +159,7 @@
     <div class="tab" onclick="showTab('evenimente')">Evenimente</div>
     <div class="tab" onclick="showTab('teme')">Teme</div>
     <div class="tab" onclick="showTab('actualizări')">Actualizări</div>
+    <div class="tab" onclick="togglePhoneMode()">📱 Phone Mode</div>
   </div>
 
   <div class="content" id="tab-content">
@@ -106,8 +170,13 @@
     <span>Built by Vasile Alexandru Ioan</span>
   </div>
 
+  <div id="secret-menu">
+    <h2>Ce cauți aici, mă?</h2>
+    <img src="https://i.ytimg.com/vi/EcMlX_36gjs/hqdefault.jpg" alt="Secret">
+    <audio id="secret-audio" src="https://cdn.soundinstants.com/uploads/2023/03/oh-brother-this-guy-stinks.mp3" autoplay loop></audio>
+  </div>
+
   <script>
-    // === Firebase Config ===
     const firebaseConfig = {
       apiKey: "AIzaSyBbbp8zggJc-ankzfoelklEI6Djnn64siE",
       authDomain: "clasa-vi-a.firebaseapp.com",
@@ -121,14 +190,16 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    emailjs.init("YOUR_PUBLIC_KEY"); // <-- Replace with your EmailJS public key
-
     let entries = [];
+
+    function togglePhoneMode() {
+      document.body.classList.toggle('phone-mode');
+    }
 
     function showTab(tabName) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(tab => {
-        if (tab.innerText.toLowerCase() === tabName.toLowerCase()) {
+        if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) {
           tab.classList.add('active');
         }
       });
@@ -136,8 +207,8 @@
       if (tabName === 'actualizări') {
         document.getElementById('tab-content').innerHTML = `
           <h2>Bună! Ce mai faceți?</h2>
-          <form onsubmit="trimiteFirebase(event); trimiteEmail(event)">
-            <input type="text" id="raspuns" placeholder="Scrie mesajul" name="mesaj">
+          <form onsubmit="trimiteFirebase(event)">
+            <input type="text" id="raspuns" placeholder="Scrie mesajul">
             <input type="submit" value="Trimite">
           </form>
         `;
@@ -171,21 +242,6 @@
         date: firebase.firestore.Timestamp.fromDate(dataFinala)
       }).then(() => {
         document.getElementById("raspuns").value = "";
-      });
-    }
-
-    function trimiteEmail(event) {
-      event.preventDefault();
-      const mesaj = document.getElementById("raspuns").value.trim();
-      if (!mesaj) return;
-
-      emailjs.send("default_service", "template_default", {
-        message: mesaj,
-        to_email: "emailjsuser@gmail.com"
-      }).then(function() {
-        console.log("Email trimis!");
-      }, function(error) {
-        console.error("Eroare trimitere email:", error);
       });
     }
 
@@ -229,6 +285,11 @@
           alert("Toate mesajele au fost șterse.");
           document.querySelector('div[style*="position: fixed"]').remove();
         });
+      } else if (pass === 'qwerty123') {
+        alert("Meniu secret activat!");
+        document.querySelector('div[style*="position: fixed"]').remove();
+        document.getElementById('secret-menu').style.display = 'block';
+        document.getElementById('secret-audio').play();
       } else {
         alert("Parolă greșită!");
       }
@@ -238,5 +299,3 @@
   </script>
 </body>
 </html>
-
-
