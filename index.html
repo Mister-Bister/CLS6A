@@ -87,6 +87,7 @@
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -120,12 +121,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    emailjs.init("YOUR_PUBLIC_KEY"); // <-- Replace with your EmailJS public key
+
     let entries = [];
 
     function showTab(tabName) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(tab => {
-        if (tab.textContent.trim().toLowerCase() === tabName.toLowerCase()) {
+        if (tab.innerText.toLowerCase() === tabName.toLowerCase()) {
           tab.classList.add('active');
         }
       });
@@ -133,8 +136,8 @@
       if (tabName === 'actualizări') {
         document.getElementById('tab-content').innerHTML = `
           <h2>Bună! Ce mai faceți?</h2>
-          <form onsubmit="trimiteFirebase(event)">
-            <input type="text" id="raspuns" placeholder="Scrie mesajul">
+          <form onsubmit="trimiteFirebase(event); trimiteEmail(event)">
+            <input type="text" id="raspuns" placeholder="Scrie mesajul" name="mesaj">
             <input type="submit" value="Trimite">
           </form>
         `;
@@ -168,6 +171,21 @@
         date: firebase.firestore.Timestamp.fromDate(dataFinala)
       }).then(() => {
         document.getElementById("raspuns").value = "";
+      });
+    }
+
+    function trimiteEmail(event) {
+      event.preventDefault();
+      const mesaj = document.getElementById("raspuns").value.trim();
+      if (!mesaj) return;
+
+      emailjs.send("default_service", "template_default", {
+        message: mesaj,
+        to_email: "emailjsuser@gmail.com"
+      }).then(function() {
+        console.log("Email trimis!");
+      }, function(error) {
+        console.error("Eroare trimitere email:", error);
       });
     }
 
@@ -220,4 +238,5 @@
   </script>
 </body>
 </html>
+
 
