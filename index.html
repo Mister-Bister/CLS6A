@@ -77,7 +77,8 @@
       text-align: right;
       padding: 10px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-end;
       gap: 10px;
     }
 
@@ -119,6 +120,19 @@
       border: 2px solid #f0c36d;
       border-radius: 10px;
       margin-top: 20px;
+    }
+
+    .bottom-button {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .bottom-button:hover {
+      background-color: #555;
     }
 
     @media (max-width: 768px) {
@@ -168,6 +182,7 @@
 
   <div class="footer">
     <span>Built by Vasile Alexandru Ioan</span>
+    <button class="bottom-button" onclick="showOrar()">Orar</button>
   </div>
 
   <div id="secret-menu">
@@ -221,6 +236,28 @@
           document.getElementById('tab-content').innerHTML += `<button onclick="resetEntries()">Reset. Admin only</button>`;
         }
       }
+    }
+
+    function showOrar() {
+      document.getElementById('tab-content').innerHTML = `
+        <h2>Orar săptămânal</h2>
+        <table>
+          <tr>
+            <th>Luni</th>
+            <th>Marți</th>
+            <th>Miercuri</th>
+            <th>Joi</th>
+            <th>Vineri</th>
+          </tr>
+          <tr>
+            <td>Gândire Critică – Bănuță<br>Română – Nicolae<br>Dirigenție – Ruxanda<br>TIC – Ristea<br>Matematică – Trancă<br>Educație Tehnică – Preduș</td>
+            <td>Engleză – Ruxanda<br>Ed. Muzicală – Gabăr<br>Fizică – Oprea<br>Română – Nicolae<br>Biologie – Constantinescu</td>
+            <td>Germană – Corbeanu<br>Matematică – Trancă<br>Ed. Plastică – Stanciu<br>Fizică – Oprea<br>Religie – Lazăr</td>
+            <td>Matematică – Trancă<br>Ed. Fizică – Gaiță<br>Română – Nicolae<br>Română – Nicolae<br>Geografie – Danila<br>Biologie – Constantinescu</td>
+            <td>Ed. Fizică – Gaiță<br>Engleză – Ruxanda<br>Matematică – Trancă<br>Română – Nicolae<br>Germană – Corbeanu<br>Istorie – Grigorița</td>
+          </tr>
+        </table>
+      `;
     }
 
     function trimiteFirebase(event) {
